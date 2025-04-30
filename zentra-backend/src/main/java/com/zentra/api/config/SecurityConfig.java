@@ -3,6 +3,8 @@ package com.zentra.api.config;
 import com.zentra.api.security.JwtTokenFilter;
 import com.zentra.api.security.JwtTokenProvider;
 import com.zentra.api.security.UserDetailsServiceImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,6 +24,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableMethodSecurity
 public class SecurityConfig {
 
+    private static final Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
     private final UserDetailsServiceImpl userDetailsService;
     private final JwtTokenProvider jwtTokenProvider;
 
@@ -42,21 +45,25 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        logger.info("Configuring security filter chain");
         http
             .csrf(csrf -> csrf.disable())
-            .authorizeHttpRequests(authorize -> authorize
-                .requestMatchers("/auth/**").permitAll()
-                .requestMatchers("/v1/public/**").permitAll()
-                .requestMatchers("/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                .requestMatchers("/v1/customer/**").hasRole("CUSTOMER")
-                .requestMatchers("/v1/business/**").hasRole("BUSINESS_OWNER")
-                .anyRequest().authenticated()
-            )
+            .authorizeHttpRequests(authorize -> {
+                authorize
+                    .requestMatchers("/api/auth/**").permitAll() // Auth endpoints
+                    .requestMatchers("/auth/**").permitAll() // Legacy auth endpoints 
+                    .requestMatchers("/v1/public/**").permitAll() // Public API endpoints
+                    .requestMatchers("/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll() // API documentation
+                    .requestMatchers("/api/**").authenticated() // All API endpoints require authentication
+                    .anyRequest().authenticated(); // Default - require authentication
+                logger.info("Authorization rules configured");
+            })
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
             .addFilterBefore(new JwtTokenFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
         
+        logger.info("Security filter chain configured");
         return http.build();
     }
     

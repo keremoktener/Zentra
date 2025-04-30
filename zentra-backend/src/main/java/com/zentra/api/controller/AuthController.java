@@ -7,6 +7,8 @@ import com.zentra.api.model.User;
 import com.zentra.api.security.JwtTokenProvider;
 import com.zentra.api.service.UserService;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,9 +24,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping({"/api/auth", "/auth"}) // Support both paths for backward compatibility
 public class AuthController {
 
+    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
     private final UserService userService;
@@ -38,6 +41,7 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@Valid @RequestBody RegisterRequest registerRequest) {
+        logger.info("Received registration request for: {}", registerRequest.getEmail());
         if (userService.existsByEmail(registerRequest.getEmail())) {
             Map<String, String> response = new HashMap<>();
             response.put("error", "Email already in use");
@@ -53,6 +57,7 @@ public class AuthController {
         user.setRole(registerRequest.getRole());
 
         User savedUser = userService.createUser(user);
+        logger.info("User created successfully: {}", savedUser.getEmail());
         
         String token = jwtTokenProvider.createToken(
             savedUser.getEmail(), 
@@ -66,6 +71,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody AuthRequest authRequest) {
+        logger.info("Received login request for: {}", authRequest.getEmail());
         try {
             Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(authRequest.getEmail(), authRequest.getPassword())
@@ -81,11 +87,13 @@ public class AuthController {
                 Collections.singletonList(user.getRole().name())
             );
             
+            logger.info("Login successful for: {}", authRequest.getEmail());
             return ResponseEntity.ok(
                 new AuthResponse(token, user.getEmail(), user.getRole().name(), user.getId())
             );
             
         } catch (AuthenticationException e) {
+            logger.warn("Login failed for: {}", authRequest.getEmail());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(Map.of("error", "Invalid email/password"));
         }

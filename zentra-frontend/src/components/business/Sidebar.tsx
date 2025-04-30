@@ -20,17 +20,17 @@ const Sidebar: React.FC = () => {
 
   return (
     <div
-      className={`bg-gray-800 text-white h-screen ${
+      className={`bg-neutral-900 text-white h-screen ${
         isCollapsed ? 'w-16' : 'w-64'
       } transition-all duration-300 ease-in-out flex flex-col`}
     >
-      <div className="flex justify-between items-center p-4 border-b border-gray-700">
+      <div className="flex justify-between items-center p-4 border-b border-neutral-700">
         <h2 className={`font-bold text-xl ${isCollapsed ? 'hidden' : 'block'}`}>
           Zentra Business
         </h2>
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="text-gray-400 hover:text-white"
+          className="text-neutral-400 hover:text-white"
         >
           {isCollapsed ? '→' : '←'}
         </button>
@@ -44,8 +44,8 @@ const Sidebar: React.FC = () => {
                 to={item.path}
                 className={`flex items-center px-4 py-3 ${
                   location.pathname === item.path
-                    ? 'bg-blue-600'
-                    : 'hover:bg-gray-700'
+                    ? 'bg-primary'
+                    : 'hover:bg-neutral-700'
                 } transition-colors duration-200`}
               >
                 <span className="text-xl">{item.icon}</span>
@@ -60,10 +60,10 @@ const Sidebar: React.FC = () => {
         </ul>
       </div>
 
-      <div className="p-4 border-t border-gray-700">
+      <div className="p-4 border-t border-neutral-700">
         <Link
           to="/logout"
-          className="flex items-center text-gray-400 hover:text-white transition-colors duration-200"
+          className="flex items-center text-neutral-400 hover:text-white transition-colors duration-200"
         >
           <span className="text-xl">🚪</span>
           <span className={`ml-4 ${isCollapsed ? 'hidden' : 'block'}`}>

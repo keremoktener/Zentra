@@ -13,12 +13,24 @@ const LoginPage: React.FC = () => {
       const response = await axios.post('/api/auth/login', values);
       
       // Store token and user info in localStorage
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify({
+      // Store just the raw token WITHOUT Bearer prefix
+      const token = response.data.token;
+      const rawToken = token.startsWith('Bearer ') ? token.substring(7) : token;
+      
+      // Store tokens in both formats - RAW TOKEN (no Bearer prefix)
+      localStorage.setItem('token', rawToken);
+      localStorage.setItem('authToken', rawToken);
+      
+      // Store user info in both formats for compatibility
+      const userInfo = {
         id: response.data.userId,
         email: response.data.email,
         role: response.data.role
-      }));
+      };
+      localStorage.setItem('user', JSON.stringify(userInfo));
+      localStorage.setItem('authUser', JSON.stringify(userInfo));
+      
+      console.log('Login successful, stored RAW token without Bearer prefix');
       
       // Redirect based on role
       if (response.data.role === 'ROLE_CUSTOMER') {
